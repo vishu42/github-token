@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/lunny/log"
@@ -22,6 +23,19 @@ var (
 	AppInstallationID int64
 	AppPrivateKey     string
 )
+
+const (
+	tokenFile = "/tmp/githubtoken/token.txt"
+	expFile   = "/tmp/githubtoken/token-expiry.txt"
+)
+
+func ensureDir(dir string) error {
+	err := os.MkdirAll(dir, 0o755)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -49,7 +63,13 @@ var rootCmd = &cobra.Command{
 		}
 
 		// get token from file
-		file, err := os.OpenFile("token.txt", os.O_RDONLY|os.O_CREATE, 0o666)
+		err := ensureDir(filepath.Dir(tokenFile))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		file, err := os.OpenFile(tokenFile, os.O_RDONLY|os.O_CREATE, 0o666)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -61,7 +81,12 @@ var rootCmd = &cobra.Command{
 		tokenStr := sc.Text()
 
 		// get exp from file
-		file, err = os.OpenFile("token-expiry.txt", os.O_RDONLY|os.O_CREATE, 0o666)
+		err = ensureDir(filepath.Dir(expFile))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		file, err = os.OpenFile(expFile, os.O_RDONLY|os.O_CREATE, 0o666)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -74,7 +99,6 @@ var rootCmd = &cobra.Command{
 
 		var token *pkg.AccessToken
 
-		// ALGO:
 		// if token is empty -> fetch the token
 		// if token is not empty
 		//     parse the expiry and if token is about to expire or expired -> fetch the token
@@ -133,14 +157,14 @@ var rootCmd = &cobra.Command{
 		}
 
 		// export the token in a file
-		err = os.WriteFile("token.txt", []byte(token.Token), 0o644)
+		err = os.WriteFile(tokenFile, []byte(token.Token), 0o644)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 
 		// export the token expiry in a file
-		err = os.WriteFile("token-expiry.txt", []byte(token.ExpiresAt.String()), 0o644)
+		err = os.WriteFile(expFile, []byte(token.ExpiresAt.String()), 0o644)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
