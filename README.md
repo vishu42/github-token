@@ -1,6 +1,6 @@
 # GITHUB-TOKEN
 
-```bash
+```
 Get a GitHub token for a GitHub App
 
 Usage:
