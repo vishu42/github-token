@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/lunny/log"
 )
 
 type GitHubAppAuth struct {
@@ -67,8 +66,6 @@ func FetchAccessToken(ctx context.Context, gitHubConfigURL string, creds *GitHub
 
 	req.Header.Set("Content-Type", "application/vnd.github+json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessTokenJWT))
-
-	log.Info("getting access token for GitHub App auth", "accessTokenURL", req.URL.String())
 
 	client := http.Client{}
 	resp, err := client.Do(req)
